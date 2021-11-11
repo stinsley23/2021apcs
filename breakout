@@ -1,0 +1,277 @@
+//Sean Tinsley
+//September 9, 2021
+//AP Computer Science
+import acm.graphics.*;
+import acm.program.*;
+import acm.util.*;
+import java.applet.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class Breakout extends GraphicsProgram 
+{
+    /** Width and height of application window in pixels */
+    public static final int APPLICATION_WIDTH = 400;
+    public static final int APPLICATION_HEIGHT = 600;
+
+    /** Dimensions of game board in pixels (usually the same) */
+    private static final int WIDTH = APPLICATION_WIDTH;
+    private static final int HEIGHT = APPLICATION_HEIGHT;
+
+    /** Dimensions of the paddle */
+    private static final int PADDLE_WIDTH = 60;
+    private static final int PADDLE_HEIGHT = 10;
+
+    /** Offset of the paddle up from the bottom */
+    private static final int PADDLE_Y_OFFSET = 30;
+
+    /** Number of bricks per row */
+    private static final int NBRICKS_PER_ROW = 10;
+
+    /** Number of rows of bricks */
+    private static final int NBRICK_ROWS = 10;
+
+    /** Separation between bricks */
+    private static final int BRICK_SEP = 4;
+
+    /** Width of a brick */
+    private static final int BRICK_WIDTH =
+        (WIDTH - (NBRICKS_PER_ROW - 1) * BRICK_SEP) / NBRICKS_PER_ROW;
+
+    /** Height of a brick */
+    private static final int BRICK_HEIGHT = 8;
+
+    /** Radius of the ball in pixels */
+    private static final int BALL_RADIUS = 10;
+
+    /** Offset of the top brick row from the top */
+    private static final int BRICK_Y_OFFSET = 70;
+
+    /** Number of "lives" (balls) before the player loses */
+    private static final int NUM_LIVES = 3;
+
+    /** Global variables declared here.  You should feel free to add others as needed. */
+    GRect paddle;
+    GOval ball;
+    double vx;
+    double vy;
+    int numLives;
+    int numBricks;
+    GLabel lifeLabel;
+    GLabel WelcomeLabel;
+    /** Runs the Breakout program. */
+    public void run() 
+    {
+        makeBricks();
+        makePaddle();
+        makeBall();
+        makeLifeCounter();
+        makeWelcome();
+        waitForClick();
+        while (numLives > 0 && numBricks > 0)
+        {
+            pause(5);
+            updateBall();
+            checkForCollisions();
+        } 
+        if (numBricks == 0)
+        {
+            GLabel winLabel = new GLabel("Congratulations, you won! Click to play again.", 
+                    APPLICATION_WIDTH/2 - 175, 
+                    APPLICATION_HEIGHT/2);
+            winLabel.setFont("Average-14-Bold");
+            removeAll();
+            add(winLabel);  
+            waitForClick();
+            remove(winLabel);
+            run();
+        }
+        else
+        {            
+            GLabel loseLabel = new GLabel("Oh No! You lost, click to play again.", APPLICATION_WIDTH/2 - 190,
+                    APPLICATION_HEIGHT/2 - 10);
+            loseLabel.setFont("Average-20-Bold");
+            removeAll();
+            add(loseLabel);
+            waitForClick();
+            remove(loseLabel);
+            run();
+        }
+    }
+
+    public void makeBricks()
+    {
+        numBricks = NBRICK_ROWS*NBRICK_ROWS;
+        for (int i=0; i<NBRICK_ROWS; i++)
+        {
+            for (int j=0; j<NBRICK_ROWS; j++)
+            {
+                GRect bricks = new GRect(BRICK_SEP + j*(BRICK_WIDTH + BRICK_SEP), 
+                        BRICK_Y_OFFSET + i*(BRICK_HEIGHT + BRICK_SEP),
+                        BRICK_WIDTH, BRICK_HEIGHT);
+                bricks.setFilled(true);
+                bricks.setColor(Color.red);
+                if(i<2)
+                {
+                    bricks.setColor(Color.red);
+                }
+                else
+                {
+                    if(i<4)
+                    {
+                        bricks.setColor(Color.orange);
+                    }
+                    else
+                    {
+                        if(i<6)
+                        {
+                            bricks.setColor(Color.yellow);
+                        }
+                        else
+                        {
+                            if(i<8)
+                            {
+                                bricks.setColor(Color.green);
+                            }
+                            else
+                            {
+                                if(i<10)
+                                {
+                                    bricks.setColor(Color.cyan);
+                                }
+                            }
+                        }                         
+                    }
+                }
+                add(bricks);
+            }
+        }
+    }
+
+    public void makePaddle()
+    {
+        paddle = new GRect(APPLICATION_WIDTH/2 - PADDLE_WIDTH/2, APPLICATION_HEIGHT - PADDLE_Y_OFFSET, 
+            PADDLE_WIDTH, PADDLE_HEIGHT);
+        paddle.setFilled(true);
+        add(paddle);
+    }
+
+    public void mouseMoved(MouseEvent event)
+    {
+        paddle.setLocation(event.getX() - PADDLE_WIDTH/2, APPLICATION_HEIGHT - PADDLE_Y_OFFSET);
+        if(paddle.getX() > APPLICATION_WIDTH - PADDLE_WIDTH)
+        {
+            paddle.setLocation(APPLICATION_WIDTH - PADDLE_WIDTH, APPLICATION_HEIGHT - PADDLE_Y_OFFSET);
+        }
+        if(paddle.getX() < 0)
+        {
+            paddle.setLocation(0, APPLICATION_HEIGHT - PADDLE_Y_OFFSET);
+        }       
+    }
+
+    public void makeBall()
+    {
+        ball = new GOval(APPLICATION_WIDTH/2, APPLICATION_HEIGHT/2, 2*BALL_RADIUS, 2*BALL_RADIUS);
+        ball.setFilled(true);
+        add(ball);
+        vx = 1+Math.random()*2;
+        vy = 3.0;
+        if (Math.random()>0.5)
+        {
+            vx = -vx;
+        }
+    }
+
+    public void updateBall()
+    {
+        ball.move(vx, vy);
+        if(ball.getY() + ball.getHeight() > getHeight())
+        {
+            numLives = numLives -1;
+            lifeLabel.setText("Lives: " + numLives);
+            remove(ball);
+            GLabel label = new GLabel("You lost a life! Click for a new ball.", APPLICATION_WIDTH/2 -  
+                    (APPLICATION_WIDTH/2)/2 - 50,
+                    APPLICATION_HEIGHT/2);
+            label.setFont("Average-16-Bold");
+            add(label);
+            waitForClick();
+            remove(label);
+            makeBall();
+            vy = -vy;
+        }
+        if(ball.getX() + ball.getWidth() > getWidth())
+        {
+            vx = -vx;
+        }
+        if(ball.getY() < 0)
+        {
+            vy = -vy;
+        }
+        if(ball.getX() < 0)
+        {
+            vx = -vx;
+        }
+    }
+
+    public void checkForCollisions()
+    {
+        GObject obj = getElementAt(ball.getX(), ball.getY());
+        if(obj == null)
+        {
+            obj = getElementAt(ball.getX(), ball.getY() + 2*BALL_RADIUS);
+        }
+        if(obj == null)
+        {
+            obj = getElementAt(ball.getX() + 2*BALL_RADIUS, ball.getY());
+        }
+        if(obj == null)
+        {
+            obj = getElementAt(ball.getX(), ball.getY() + 2*BALL_RADIUS);
+        }
+        if(obj == paddle)
+        {
+            if(vy > 0)
+            {
+                vy = -vy;
+            }
+        }
+        else
+        {
+            if(obj == null)
+            {
+            }
+            else if (obj instanceof GRect)
+            {
+                remove(obj);
+                numBricks = numBricks - 1;
+                vy = -vy;
+                if (numBricks == 0)
+                {
+                    numLives = 0;
+                }
+            }
+        }
+    }
+
+    public void makeLifeCounter()
+    {
+        numLives = NUM_LIVES;
+        lifeLabel = new GLabel("Lives: " + numLives + "", 5,20);
+        add(lifeLabel);
+    }
+
+    public void makeWelcome()
+    {
+        WelcomeLabel = new GLabel("Welcome! Let's play Breakout, click to start.", 
+            APPLICATION_HEIGHT/2 - 275, 
+            APPLICATION_WIDTH/2 + 70);
+        WelcomeLabel.setFont("Average-16-Bold");
+        add(WelcomeLabel);
+    }
+
+    public void mouseClicked(MouseEvent event)
+    {
+        remove(WelcomeLabel);
+    }
+}
