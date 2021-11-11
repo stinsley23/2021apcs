@@ -1,2 +1,2 @@
 # 2021apcs
-Hello, this is all of my work from AP Computer Science 2021-22, enjoy. 
+Greetings. Encompassed in this repository may you find any and all projects from my AP Computer Science class from 2021-2022. At this juncture, my programming experience is limited, but I am eager to learn more. You know what thay say, get busy livin', or get busy dyin'. -Sean
