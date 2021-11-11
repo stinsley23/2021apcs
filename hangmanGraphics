@@ -1,0 +1,236 @@
+//Sean Tinsley
+//October 27, 2021
+//AP Computer Science
+import acm.program.*;
+import acm.graphics.*;
+import java.awt.Color;
+import java.awt.event.*;
+
+public class HangmanGraphicsProgram extends GraphicsProgram
+{
+    /** Width and height of application window in pixels */
+    public static final int APPLICATION_WIDTH = 800;
+    public static final int APPLICATION_HEIGHT = 500;
+    private static final int WIDTH = APPLICATION_WIDTH;
+    private static final int HEIGHT = APPLICATION_HEIGHT;
+
+    private static final int PUZZLE_Y_OFFSET = 100;
+    private static final int GUESSED_LETTERS_X_OFFSET = 10;
+    private static final int GUESSED_LETTERS_Y_OFFSET = 150;
+
+    private GLabel puzzleLabel;
+    private GLabel lettersGuessedLabel;
+    private HangmanGame game;
+    private GLabel guessesLeftLabel;
+    private boolean gameOver;
+    private GOval drawHead;
+    private GOval drawBody;
+    private GOval drawLegs;
+
+    public void run()
+    {
+        while (true)
+        {
+            setupGame();
+            playOneGame();
+            endGame();
+            waitForClick();
+            removeAll();
+        }
+    }
+
+    public void setupGame()
+    {
+        game = new HangmanGame();
+        gameOver = false;
+        puzzleLabel = new GLabel(game.getPuzzle());
+        int fontSize = 64;
+        puzzleLabel.setFont("Monospaced-plain-"+fontSize);
+        while(puzzleLabel.getWidth()>WIDTH)
+        {
+            fontSize--;
+            puzzleLabel.setFont("*-*-"+fontSize);
+        }
+        puzzleLabel.setLocation((WIDTH-puzzleLabel.getWidth())/2, PUZZLE_Y_OFFSET);
+        add(puzzleLabel);
+
+        lettersGuessedLabel = new GLabel("Letters guessed: ", 
+            GUESSED_LETTERS_X_OFFSET, GUESSED_LETTERS_Y_OFFSET);
+        lettersGuessedLabel.setFont("Sansserif-Plain-18");
+        lettersGuessedLabel.setColor(Color.red);
+        add(lettersGuessedLabel);
+        guessesLeftLabel = new GLabel("Guesses left: " + game.getGuessesLeft(), 
+                                       GUESSED_LETTERS_X_OFFSET, 
+            GUESSED_LETTERS_Y_OFFSET + 100);
+        guessesLeftLabel.setFont("Sansserif-Plain-18");
+        guessesLeftLabel.setColor(Color.red);
+        add(guessesLeftLabel);
+
+        drawGallows();
+    }
+
+    public void playOneGame()
+    {
+        while (gameOver == false)
+        {
+            pause(25);
+        }
+    }
+
+    public void endGame()
+    {
+        if (game.getPuzzle().equals(game.getActualAnswer()))
+        {
+            pause(1500);
+            removeAll();
+            GLabel correctAnswer = new GLabel("The correct answer was " + game.getActualAnswer() + ".",
+                    APPLICATION_WIDTH/2 - 125, APPLICATION_HEIGHT/2 - 50);
+            correctAnswer.setFont("Sansserif-Plain-18");
+            add(correctAnswer);
+            GLabel youWin = new GLabel("You Won! Click to play again.", APPLICATION_WIDTH/2 - 100, 
+                    APPLICATION_HEIGHT/2);
+            youWin.setFont("Sansserif-Plain-18");
+            add(youWin);
+        }
+        else
+        {
+            pause(1500);
+            removeAll();
+            GLabel correctAnswer = new GLabel("The correct answer was " + game.getActualAnswer() + ".",
+                    APPLICATION_WIDTH/2 - 125, APPLICATION_HEIGHT/2 - 50);
+            correctAnswer.setFont("Sansserif-Plain-18");
+            add(correctAnswer);
+            GLabel youLose = new GLabel("You Lost! Click to try again.", 
+                    APPLICATION_WIDTH/2 - 100, APPLICATION_HEIGHT/2); 
+            youLose.setFont("Sansserif-Plain-18");
+            add(youLose);            
+            puzzleLabel.setText(game.getActualAnswer());
+        }
+    }
+
+    public void keyPressed(KeyEvent event)
+    {
+        if (gameOver == false)
+        {
+            String letter = KeyEvent.getKeyText(event.getKeyCode()).toUpperCase();              
+            if (game.makeGuess(letter))
+            {
+                puzzleLabel.setText(game.getPuzzle());
+            }
+            else
+            {
+                drawBodyPart();
+                guessesLeftLabel.setText("Guesses left: " + game.getGuessesLeft());
+            }
+            lettersGuessedLabel.setText("Letters guessed: " + game.getLettersGuessed());
+            if (game.getPuzzle().equals(game.getActualAnswer()))
+                gameOver = true;
+            if (game.getGuessesLeft() == 0)
+                gameOver = true;
+        }
+    }
+
+    public void drawGallows()
+    {
+        GRect rect1 = new GRect(APPLICATION_WIDTH/2 - 200, 480, 400, 6);
+        rect1.setFilled(true);
+        add(rect1);
+
+        GRect rect2 = new GRect(APPLICATION_WIDTH/2, 180, 6, 300);
+        rect2.setFilled(true);
+        add(rect2);
+
+        GRect rect3 = new GRect(APPLICATION_WIDTH/2, 180, 140 , 6);
+        rect3.setFilled(true);
+        add(rect3);
+
+        GRect rect4 = new GRect(APPLICATION_WIDTH/2 + 140, 180, 6 , 40);
+        rect4.setFilled(true);
+        add(rect4);
+    }
+
+    public void drawBodyPart()
+    {
+        if (game.getGuessesLeft() == 6)
+            drawHead();
+        else if (game.getGuessesLeft() == 5)
+            drawBody();
+        else if (game.getGuessesLeft() == 4)
+            drawLeg1();
+        else if (game.getGuessesLeft() == 3)
+            drawLeg2();
+        else if (game.getGuessesLeft() == 2)
+            drawArms();
+        else if (game.getGuessesLeft() == 1)
+            drawFace();
+        else
+            drawRedX();
+    }
+
+    public void drawHead()
+    {       
+        drawHead = new GOval(APPLICATION_WIDTH/2 + 105, 220, 75, 75);
+        add(drawHead);
+    }
+
+    public void drawBody()
+    {
+        GRect body = new GRect (APPLICATION_WIDTH/2 + 137, 295, 10, 100);
+        body.setFilled(true);
+        add(body);
+    }
+
+    public void drawLeg1()
+    {
+        GLine leg1 = new GLine(APPLICATION_WIDTH/2 + 138, 390,
+                               APPLICATION_WIDTH/2 + 100, 475);
+        
+        add(leg1);
+    }
+    
+    public void drawLeg2()
+    {
+        GLine leg2 = new GLine(APPLICATION_WIDTH/2 + 143, 390,
+                               APPLICATION_WIDTH/2 + 180, 475);
+        add(leg2);
+    }
+    
+    public void drawArms()
+    {
+        GLine rightArm = new GLine(APPLICATION_WIDTH/2 + 140, 345,
+                                  APPLICATION_WIDTH/2 + 190, 310);
+        add(rightArm);
+        
+        GLine leftArm = new GLine(APPLICATION_WIDTH/2 + 140, 345,
+                                   APPLICATION_WIDTH/2 + 90, 310);
+        add(leftArm);
+    }
+
+    public void drawFace()
+    {
+        GOval leftEye = new GOval(APPLICATION_WIDTH/2 + 123, 245, 10, 10);
+        leftEye.setFilled(true);
+        add(leftEye);
+        
+        GOval rightEye = new GOval(APPLICATION_WIDTH/2 + 150, 245, 10, 10);
+        rightEye.setFilled(true);
+        add(rightEye);
+        
+        GRect mouth = new GRect(APPLICATION_WIDTH/2 + 125, 270, 35, 3);
+        mouth.setFilled(true);
+        add(mouth);
+    }
+    
+    public void drawRedX()
+    {
+        GLine one = new GLine(APPLICATION_WIDTH/2 + 85, 220, 
+                              APPLICATION_WIDTH/2 + 200, 475);
+        one.setColor(Color.red);
+        add(one);
+        
+        GLine two = new GLine(APPLICATION_WIDTH/2 + 200, 220,
+                              APPLICATION_WIDTH/2 + 85, 475);
+        two.setColor(Color.red);
+        add(two);
+    }
+}
